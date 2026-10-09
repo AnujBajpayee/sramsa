@@ -1,0 +1,13 @@
+* sky130 inverter smoke test
+.lib "C:/sramsa/models/sky130_fd_pr/models/sky130.lib.spice" tt
+Vdd vdd 0 1.8
+Vin in 0 PULSE(0 1.8 1n 100p 100p 2n 5n)
+XMP out in vdd vdd sky130_fd_pr__pfet_01v8 L=0.15 W=2
+XMN out in 0 0 sky130_fd_pr__nfet_01v8 L=0.15 W=1
+Cl out 0 10f
+.tran 10p 20n
+.control
+run
+plot v(in) v(out)
+.endc
+.end
