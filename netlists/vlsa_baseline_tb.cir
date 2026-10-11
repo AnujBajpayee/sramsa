@@ -1,0 +1,78 @@
+* =====================================================================
+* Baseline voltage-latch sense amplifier (VLSA) testbench
+* Process : SkyWater sky130, 1.8 V devices, typical corner
+* Purpose : first working transient (precharge -> bitline develop ->
+*           sense -> regenerate), with measurements for later sweeps
+* =====================================================================
+
+.lib "C:/sramsa/models/sky130_fd_pr/models/sky130.lib.spice" tt
+
+.param VDD=1.8
+.param CBL=200f        ; bitline capacitance (each side)
+.param ICELL=25u       ; cell read current discharging BLB
+.param WN=1.0          ; latch NMOS width (um)
+.param WP=2.0          ; latch PMOS width (um)
+.param WT=2.0          ; tail NMOS width (um)
+.param WI=1.0          ; isolation PMOS width (um)
+.param LMIN=0.15       ; minimum channel length (um)
+
+* ---------------- supplies ----------------
+Vdd vdd 0 {VDD}
+
+* ---------------- control signals ----------------
+* PREB: low (precharge ON) from 0 to 1 ns, then high
+Vpre preb 0 PULSE(0 {VDD} 1n 50p 50p 100n 200n)
+* SE: sense enable rises at 2.5 ns, high until 7.5 ns
+Vse  se   0 PULSE(0 {VDD} 2.5n 50p 50p 5n 200n)
+
+* ---------------- bitlines ----------------
+Cbl  bl  0 {CBL}
+Cblb blb 0 {CBL}
+
+* precharge and equalize (PMOS, active when PREB is low)
+XMP1 bl  preb vdd vdd sky130_fd_pr__pfet_01v8 L={LMIN} W=2
+XMP2 blb preb vdd vdd sky130_fd_pr__pfet_01v8 L={LMIN} W=2
+XMEQ bl  preb blb vdd sky130_fd_pr__pfet_01v8 L={LMIN} W=2
+
+* accessed cell pulls BLB down: current from 1.5 ns to 2.5 ns
+Icell blb 0 PULSE(0 {ICELL} 1.5n 50p 50p 1n 200n)
+
+* ---------------- sense amplifier ----------------
+* isolation PMOS: SA nodes follow bitlines while SE is low
+XMI1 out  se bl  vdd sky130_fd_pr__pfet_01v8 L={LMIN} W={WI}
+XMI2 outb se blb vdd sky130_fd_pr__pfet_01v8 L={LMIN} W={WI}
+
+* cross-coupled latch
+XM1 out  outb tail 0   sky130_fd_pr__nfet_01v8 L={LMIN} W={WN}
+XM2 outb out  tail 0   sky130_fd_pr__nfet_01v8 L={LMIN} W={WN}
+XM3 out  outb vdd  vdd sky130_fd_pr__pfet_01v8 L={LMIN} W={WP}
+XM4 outb out  vdd  vdd sky130_fd_pr__pfet_01v8 L={LMIN} W={WP}
+
+* tail switch
+XMT tail se 0 0 sky130_fd_pr__nfet_01v8 L={LMIN} W={WT}
+
+* output loading
+Cout  out  0 5f
+Coutb outb 0 5f
+
+* ---------------- analysis ----------------
+.temp 27
+.tran 5p 10n
+
+* input differential just before the sense enable
+.meas tran dv_in      FIND par('v(bl)-v(blb)') AT=2.45n
+* sensing delay: SE 50% to OUTB falling through VDD/2
+.meas tran t_sense    TRIG v(se) VAL=0.9 RISE=1 TARG v(outb) VAL=0.9 FALL=1
+* final resolved levels
+.meas tran vout_final FIND v(out)  AT=7n
+.meas tran voutb_fin  FIND v(outb) AT=7n
+* energy drawn from the supply during the sensing window
+.meas tran e_sense    INTEG par('-i(vdd)*v(vdd)') FROM=2.4n TO=7.5n
+
+.control
+run
+plot v(bl) v(blb) v(se)
+plot v(out) v(outb) v(se)
+.endc
+
+.end
