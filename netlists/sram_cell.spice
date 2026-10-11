@@ -1,0 +1,17 @@
+*sky130 6T sram Bitcell Subckt*
+.subckt sram_6t Q QB BL BLB WL VDD VSS
+
+*CROSS_COUPLED INVERTER 1 ( Stores Q , Driven by QB)
+M_PD1 Q QB VSS VSS sky130_fd_pr__nfet_01v8 w=1.0l l=0.15l
+M_PU1 Q QB VDD VDD sky130_fd_pr__pfet_01v8 w=1.5l l=0.15l
+
+*CROSS_COUPLED INVERTER 2 ( Stores QB , Driven by Q)
+M_PD2 QB Q VSS VSS sky130_fd_pr__nfet_01v8 w=1.0l l=0.15l
+M_PU2 QB Q VDD VDD sky130_fd_pr__pfet_01v8 w=1.5l l=0.15l
+
+*access transistors (connects the bitlines to the storage nodes)
+M_AX1 Q WL BL VSS sky130_fd_pr__nfet_01v8 w=1.2L l=0.15l
+M_AX2 QB WL BLB VSS sky130_fd_pr__nfet_01v8 w=1.2L l=0.15l
+
+.ends sram_6t
+

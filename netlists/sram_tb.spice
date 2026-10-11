@@ -1,0 +1,31 @@
+* 6T SRAM Transient Testbench
+
+* Include SKY130 Model Library
+.include "../models/sky130_fd_pr/models/sky130.lib.spice"
+
+* Include the SRAM Bitcell Subcircuit
+.include "sram_cell.spice"
+
+* Power Supplies
+V_DD VDD 0 1.8
+V_SS VSS 0 0
+
+* Instantiate 6T SRAM Cell
+Xcell cell_Q cell_QB BL BLB WL VDD VSS sram_6t
+
+* Stimulus Signals (Wordline and Bitlines)
+V_WL WL 0 PULSE(0 1.8 0.5ns 0.1ns 0.1ns 2ns 5ns)
+V_BL BL 0 1.8
+V_BLB BLB 0 0
+
+* Analysis Control
+.control
+* Run transient analysis for 5 nanoseconds
+tran 0.01ns 5ns
+wrdata ../results/sram_data.txt v(cell_Q) v(cell_QB) v(WL)
+
+* Save key signals for viewing
+print v(cell_Q) v(cell_QB) v(WL)
+
+.endc
+.end
