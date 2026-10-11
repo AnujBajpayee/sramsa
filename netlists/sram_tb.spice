@@ -21,7 +21,7 @@ V_BLB BLB 0 0
 * Analysis Control
 .control
 * Run transient analysis for 5 nanoseconds
-tran 0.01ns 5ns
+tran 0.01ns 15ns
 wrdata ../results/sram_data.txt v(cell_Q) v(cell_QB) v(WL)
 
 * Save key signals for viewing
