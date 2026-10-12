@@ -1,31 +1,33 @@
-* 6T SRAM Transient Testbench
+* ==========================================
+* Top-Level SRAM Read Path Testbench (PTM)
+* ==========================================
 
-* Include SKY130 Model Library
-.include "../models/sky130_fd_pr/models/sky130.lib.spice"
+* Include PTM Physics-Based Model File
+.include "C:/sramsa/models/ptm/ptm130.pm"
 
-* Include the SRAM Bitcell Subcircuit
+* Include Subcircuit Netlist Definitions
 .include "sram_cell.spice"
 
-* Power Supplies
-V_DD VDD 0 1.8
-V_SS VSS 0 0
+* Global Power Supplies
+V_DD vdd 0 1.8
+V_SS vss 0 0
 
-* Instantiate 6T SRAM Cell
-Xcell cell_Q cell_QB BL BLB WL VDD VSS sram_6t
+* Module Instantiations
+Xcell  q_node qb_node bl blb wl vdd vss sram_6t
+Xpre   bl blb vdd pre_b sram_precharge
+Xsense bl blb vdd vss saen iso out_p out_n voltage_sense_amp
 
-* Stimulus Signals (Wordline and Bitlines)
-V_WL WL 0 PULSE(0 1.8 0.5ns 0.1ns 0.1ns 2ns 5ns)
-V_BL BL 0 1.8
-V_BLB BLB 0 0
+* Testbench Control Clocks & Stimulus Pulses
+V_PRE  pre_b 0 pulse(1.8 0 0 0.1ns 0.1ns 4.9ns 20ns)
+V_WL   wl    0 pulse(0 1.8 6ns 0.1ns 0.1ns 4ns 20ns)
+V_ISO  iso   0 pulse(0 1.8 5.8ns 0.1ns 0.1ns 5ns 20ns)
+V_SAEN saen  0 pulse(0 1.8 7.5ns 0.1ns 0.1ns 3ns 20ns)
 
-* Analysis Control
+* Simulation Control & Raw File Export
 .control
-* Run transient analysis for 5 nanoseconds
-tran 0.01ns 15ns
-wrdata ../results/sram_data.txt v(cell_Q) v(cell_QB) v(WL)
-
-* Save key signals for viewing
-print v(cell_Q) v(cell_QB) v(WL)
-
+op
+tran 0.01ns 20ns
+write C:/sramsa/results/sram_tran.raw v(bl) v(blb) v(out_p) v(out_n) v(wl) v(saen)
 .endc
+
 .end
