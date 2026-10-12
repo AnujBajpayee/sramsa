@@ -17,16 +17,35 @@ Xcell  q_node qb_node bl blb wl vdd vss sram_6t
 Xpre   bl blb vdd pre_b sram_precharge
 Xsense bl blb vdd vss saen iso out_p out_n voltage_sense_amp
 
-* Testbench Control Clocks & Stimulus Pulses
-V_PRE  pre_b 0 pulse(1.8 0 0 0.1ns 0.1ns 4.9ns 20ns)
-V_WL   wl    0 pulse(0 1.8 6ns 0.1ns 0.1ns 4ns 20ns)
-V_ISO  iso   0 pulse(0 1.8 5.8ns 0.1ns 0.1ns 5ns 20ns)
-V_SAEN saen  0 pulse(0 1.8 7.5ns 0.1ns 0.1ns 3ns 20ns)
+* Testbench Control Clocks & Stimulus Pulses (Optimized Margins)
+* 1. Pre-charge de-asserts at 4.0ns
+V_PRE  pre_b 0 pulse(1.8 0 4.0ns 0.1ns 0.1ns 10ns 20ns)
 
-* Simulation Control & Raw File Export
+* 2. Wordline (WL) turns on at 5.0ns
+V_WL   wl    0 pulse(0 1.8 5.0ns 0.1ns 0.1ns 10ns 20ns)
+
+* 3. Isolation (ISO) turns on at 5.2ns (allowing bitlines to develop differential swing)
+V_ISO  iso   0 pulse(0 1.8 5.2ns 0.1ns 0.1ns 10ns 20ns)
+
+* 4. Sense Enable (SAEN) fires at 6.0ns (after differential voltage is established)
+V_SAEN saen  0 pulse(0 1.8 6.0ns 0.1ns 0.1ns 10ns 20ns)
+
+* Simulation Control & Automated Measurements
 .control
+* Force initial voltage states
+ic v(out_p)=1.8 v(out_n)=1.8 v(q_node)=0 v(qb_node)=1.8 v(bl)=1.8 v(blb)=1.8
+
 op
-tran 0.01ns 20ns
+tran 0.01ns 15ns
+
+* --- Clean Automated Timing Measurements ---
+meas tran t_wl_rise WHEN v(wl)=0.9 rise=1 from=4ns to=8ns
+meas tran t_out_fall WHEN v(out_p)=0.9 fall=1 from=5ns to=10ns
+
+* Calculate true positive Read Access Time (t_AA)
+let t_aa = t_out_fall - t_wl_rise
+print t_aa
+
 write C:/sramsa/results/sram_tran.raw v(bl) v(blb) v(out_p) v(out_n) v(wl) v(saen)
 .endc
 
