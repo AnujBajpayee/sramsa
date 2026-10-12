@@ -1,14 +1,63 @@
-CMOS Sense Amplifier for an SRAM Read PathProject OverviewThis repository houses a transistor-level design and characterization project for a latch-type (cross-coupled) CMOS sense amplifier intended for an advanced SRAM read path. Built completely using open-source EDA tools on the SkyWater Sky130 process node, the project moves from core circuit transient validation all the way to layout and parasitic-aware re-simulation.Technology & Tool StackComponentTool / FrameworkDescriptionCircuit Simulationngspice (ngspice_con)Native Windows-based SPICE engine for transient analysisProcess ModelsSkyWater Sky1301.8V standard devices (sky130_fd_pr__nfet_01v8 / pfet_01v8)Data & AutomationPython (numpy, custom scripts)Automated extraction, parsing, and data loggingLayout & DRCKLayoutMask layout design and design rule checkingEnvironmentVS Code & GitCore editor and version control workflowRepository Architecturesramsa/
-├── models/         # SkyWater Sky130 model libraries (sky130_fd_pr/)
-├── netlists/       # SPICE subcircuits (sram_cell.spice) & testbenches (sram_tb.spice)
-├── results/        # Simulation data outputs (sram_data.txt) and plots
-├── layout/         # Physical layout files (future phase)
-├── scripts/        # Python automation and measurement scripts
-└── notes/          # Design calculations and technical notes
+# CMOS Sense Amplifier for an SRAM Read Path
 
-Progress & Setup LogEnvironment setup and baseline integration completed on Windows:[x] Initialized project repository structure and version control workflow.[x] Configured native Windows ngspice command-line execution interface.[x] Integrated the SkyWater Sky130 process design kit and model directories.[x] Verified component smoke tests and inverter characteristics.[x] Successfully executed the baseline 6T SRAM transient testbench (sram_tb.spice).[x] Automated tabular data generation (results/sram_data.txt) via .control blocks.Quick Start Guide1. Model ConfigurationThe SKY130 model libraries are integrated into the models/ directory:cd models
+Transistor-level design and characterization of a latch-type (cross-coupled) CMOS sense amplifier for an SRAM read path, built entirely with open-source EDA tools on the SkyWater Sky130 process.
+
+**Status:** Baseline 6T SRAM transient testbench is working. Sense amplifier design, characterization, and layout are in progress (see [Roadmap](#roadmap)).
+
+## Tech Stack
+
+| Purpose | Tool |
+|---|---|
+| Circuit simulation | ngspice (`ngspice_con`) |
+| Process models | SkyWater Sky130, 1.8 V devices (`sky130_fd_pr__nfet_01v8`, `sky130_fd_pr__pfet_01v8`) |
+| Automation | Python (numpy) for measurement, parsing, and data logging |
+| Layout and DRC | KLayout |
+
+## Repository Structure
+
+```text
+sramsa/
+├── models/     # Sky130 model libraries (sky130_fd_pr/)
+├── netlists/   # SPICE subcircuits (sram_cell.spice) and testbenches (sram_tb.spice)
+├── results/    # Simulation output (sram_data.txt) and plots
+├── scripts/    # Python automation and measurement scripts
+├── layout/     # Physical layout files (future phase)
+└── notes/      # Design calculations and technical notes
+```
+
+## Getting Started
+
+### 1. Install the Sky130 models
+
+```bash
+cd models
 git clone https://github.com/google/skywater-pdk-libs-sky130_fd_pr.git sky130_fd_pr
-Note: Testbench netlists automatically link these models using relative paths:.include "../models/sky130_fd_pr/models/sky130.lib.spice"
-2. Running SimulationsNavigate to the netlists directory and run the testbench directly through ngspice_con:cd netlists
+```
+
+Testbenches link the models using a relative path:
+
+```spice
+.include "../models/sky130_fd_pr/models/sky130.lib.spice"
+```
+
+### 2. Run a simulation
+
+```bash
+cd netlists
 ngspice_con sram_tb.spice
-Project RoadmapEnvironment Setup & Baseline Verification — CompletedSRAM Read-Path Fundamentals — Precharge networks, bitline swing, and cell read currentLatch-Type Sense Amplifier Design — Topology exploration and device sizingTiming & Sensing Delay Characterization — Sense-enable timing window optimizationRobustness Analysis — Input offset voltage, Monte Carlo variation, and process cornersPhysical Layout & DRC — Layout implementation and parasitic-aware extractionLicenseDistributed under the terms to be decided.
+```
+
+Results are written to `results/sram_data.txt` by the `.control` block in the testbench.
+
+## Roadmap
+
+- [x] **Setup and baseline:** repo structure, ngspice and Sky130 integration, inverter characteristics, baseline 6T SRAM transient testbench with automated data output
+- [ ] **Read-path fundamentals:** precharge network, bitline swing, cell read current
+- [ ] **Sense amplifier design:** topology exploration and device sizing
+- [ ] **Timing characterization:** sensing delay and sense-enable timing window
+- [ ] **Robustness analysis:** input offset voltage, Monte Carlo variation, process corners
+- [ ] **Physical layout:** layout, DRC, and parasitic-aware re-simulation
+
+## License
+
+To be decided.
