@@ -1,0 +1,40 @@
+* ==========================================
+* SRAM Read Path WITHOUT Sense Amplifier (Full-Rail Discharge)
+* Technology: PTM 130nm (BSIM4)
+* ==========================================
+
+.include "C:/sramsa/models/ptm/ptm130.pm"
+.include "C:/sramsa/netlists/sram_cell.spice"
+
+.param Vsup = 1.8
+
+V_DD VDD 0 DC {Vsup}
+
+* 1. 6T SRAM bitcell
+Xcell Q QB BL BLB WL VDD 0 sram_6t
+
+* 2. Precharge & equalization (active-low pre_bar)
+Xpc BL BLB VDD pre_bar sram_precharge
+
+* Heavy bitline capacitance
+C_bl  BL  0 500fF
+C_blb BLB 0 500fF
+
+* --- Stimuli ---
+V_PREBAR pre_bar 0 PULSE(1.8 0 0ns 100ps 100ps 4ns 20ns)
+V_WL wl 0 PULSE(0 1.8 5ns 100ps 100ps 10ns 20ns)
+
+* Initial conditions (cell stores a '0')
+.ic V(Q)=0 V(QB)=1.8 V(BL)=1.8 V(BLB)=1.8
+
+.options reltol=1e-3 vntol=1e-6 gmin=1e-12
+
+.control
+  * Create the results folder if it doesn't exist (Windows)
+  shell if not exist C:\sramsa\results mkdir C:\sramsa\results
+
+  tran 10ps 20ns
+  write C:/sramsa/results/sram_nosense_output.raw v(BL) v(BLB) v(wl) v(Q) v(QB) v(pre_bar)
+.endc
+
+.end
