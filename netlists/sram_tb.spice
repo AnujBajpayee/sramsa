@@ -1,52 +1,52 @@
-* ==========================================
-* Top-Level SRAM Read Path Testbench (PTM)
-* ==========================================
+- ==========================================
+- Top-Level SRAM Read Path Testbench (PTM)
+- ==========================================
 
-* Include PTM Physics-Based Model File
+- Include PTM Physics-Based Model File
 .include "C:/sramsa/models/ptm/ptm130.pm"
 
-* Include Subcircuit Netlist Definitions
-.include "sram_cell.spice"
+- Include Subcircuit Netlist Definitions from the netlists folder
+.include "C:/sramsa/netlists/sram_cell.spice"
 
-* Global Power Supplies
+- Global Power Supplies
 V_DD vdd 0 1.8
 V_SS vss 0 0
 
-* Module Instantiations
+- Module Instantiations
 Xcell  q_node qb_node bl blb wl vdd vss sram_6t
 Xpre   bl blb vdd pre_b sram_precharge
 Xsense bl blb vdd vss saen iso out_p out_n voltage_sense_amp
 
-* Testbench Control Clocks & Stimulus Pulses (Optimized Margins)
-* 1. Pre-charge de-asserts at 4.0ns
+- Testbench Control Clocks & Stimulus Pulses (Optimized Margins)
+- Pre-charge de-asserts at 4.0ns
 V_PRE  pre_b 0 pulse(1.8 0 4.0ns 0.1ns 0.1ns 10ns 20ns)
 
-* 2. Wordline (WL) turns on at 5.0ns
+- 2. Wordline (WL) turns on at 5.0ns
 V_WL   wl    0 pulse(0 1.8 5.0ns 0.1ns 0.1ns 10ns 20ns)
 
-* 3. Isolation (ISO) turns on at 5.2ns (allowing bitlines to develop differential swing)
+- 3. Isolation (ISO) turns on at 5.2ns (allowing bitlines to develop differential swing)
 V_ISO  iso   0 pulse(0 1.8 5.2ns 0.1ns 0.1ns 10ns 20ns)
 
-* 4. Sense Enable (SAEN) fires at 6.0ns (after differential voltage is established)
+- 4. Sense Enable (SAEN) fires at 6.0ns (after differential voltage is established)
 V_SAEN saen  0 pulse(0 1.8 6.0ns 0.1ns 0.1ns 10ns 20ns)
 
-* Simulation Control & Automated Measurements
+- Simulation Control & Automated Measurements
 .control
-* Force initial voltage states
-ic v(out_p)=1.8 v(out_n)=1.8 v(q_node)=0 v(qb_node)=1.8 v(bl)=1.8 v(blb)=1.8
+  * Force initial voltage states
+  ic v(out_p)=1.8 v(out_n)=1.8 v(q_node)=0 v(qb_node)=1.8 v(bl)=1.8 v(blb)=1.8
 
-op
-tran 0.01ns 15ns
+  op
+  tran 0.01ns 15ns
 
-* --- Clean Automated Timing Measurements ---
-meas tran t_wl_rise WHEN v(wl)=0.9 rise=1 from=4ns to=8ns
-meas tran t_out_fall WHEN v(out_p)=0.9 fall=1 from=5ns to=10ns
+  * --- Clean Automated Timing Measurements (Aligned to 0.9V Threshold) ---
+  meas tran t_wl_rise WHEN v(wl)=0.9 rise=1 from=4ns to=8ns
+  meas tran t_out_fall WHEN v(out_p)=0.9 fall=1 from=5ns to=10ns
 
-* Calculate true positive Read Access Time (t_AA)
-let t_aa = t_out_fall - t_wl_rise
-print t_aa
+  * Calculate true positive Read Access Time (t_AA)
+  let t_aa = t_out_fall - t_wl_rise
+  print t_aa
 
-write C:/sramsa/results/sram_tran.raw v(bl) v(blb) v(out_p) v(out_n) v(wl) v(saen)
+  write C:/sramsa/results/sram_tran.raw v(bl) v(blb) v(out_p) v(out_n) v(wl) v(saen)
 .endc
 
 .end
